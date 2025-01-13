@@ -17,6 +17,6 @@
 Для запуска проекта необходимо скопировать файл `main.cpp` и запустить его в любой среде Python.
 
 ```bash
-g++ main.cpp - o programm
+g++ main.cpp -o programm
 ./programm
 ```
