@@ -2,6 +2,8 @@
 #include <cmath>
 #include <string>
 #include <sstream>
+#include <iomanip>
+#include <stdexcept>
 
 class ComplexNumber {
 private:
@@ -9,46 +11,55 @@ private:
     double imag;
 
 public:
-    // Конструктор
+    // Конструкторы
+    ComplexNumber() : real(0), imag(0) {}
     ComplexNumber(double r, double i) : real(r), imag(i) {}
 
+    // Фабричный метод для полярной формы
+    static ComplexNumber fromPolar(double r, double theta) {
+        return ComplexNumber(r * cos(theta), r * sin(theta));
+    }
+
     // Сложение комплексных чисел
-    ComplexNumber operator+(const ComplexNumber& other) {
+    inline ComplexNumber operator+(const ComplexNumber& other) const {
         return ComplexNumber(real + other.real, imag + other.imag);
     }
 
     // Вычитание комплексных чисел
-    ComplexNumber operator-(const ComplexNumber& other) {
+    inline ComplexNumber operator-(const ComplexNumber& other) const {
         return ComplexNumber(real - other.real, imag - other.imag);
     }
 
     // Умножение комплексных чисел
-    ComplexNumber operator*(const ComplexNumber& other) {
+    inline ComplexNumber operator*(const ComplexNumber& other) const {
         double r = real * other.real - imag * other.imag;
         double i = real * other.imag + imag * other.real;
         return ComplexNumber(r, i);
     }
 
     // Деление комплексных чисел
-    ComplexNumber operator/(const ComplexNumber& other) {
+    inline ComplexNumber operator/(const ComplexNumber& other) const {
         double denom = other.real * other.real + other.imag * other.imag;
+        if (denom == 0) {
+            throw std::runtime_error("Деление на ноль невозможно");
+        }
         double r = (real * other.real + imag * other.imag) / denom;
         double i = (imag * other.real - real * other.imag) / denom;
         return ComplexNumber(r, i);
     }
 
     // Модуль комплексного числа
-    double modulus() const {
+    inline double modulus() const {
         return sqrt(real * real + imag * imag);
     }
 
     // Аргумент (угол) комплексного числа
-    double argument() const {
+    inline double argument() const {
         return atan2(imag, real);
     }
 
     // Конъюгат комплексного числа
-    ComplexNumber conjugate() const {
+    inline ComplexNumber conjugate() const {
         return ComplexNumber(real, -imag);
     }
 
@@ -69,23 +80,23 @@ public:
     }
 
     // Сравнение комплексных чисел
-    bool operator==(const ComplexNumber& other) const {
+    inline bool operator==(const ComplexNumber& other) const {
         return real == other.real && imag == other.imag;
     }
 
-    bool operator!=(const ComplexNumber& other) const {
+    inline bool operator!=(const ComplexNumber& other) const {
         return !(*this == other);
     }
 
-    bool operator<(const ComplexNumber& other) const {
+    inline bool operator<(const ComplexNumber& other) const {
         return modulus() < other.modulus();
     }
 
-    bool operator>(const ComplexNumber& other) const {
+    inline bool operator>(const ComplexNumber& other) const {
         return modulus() > other.modulus();
     }
 
-    // Вывод комплексного числа
+    // Преобразование в строку
     std::string str() const {
         std::ostringstream oss;
         if (imag >= 0)
@@ -95,47 +106,60 @@ public:
         return oss.str();
     }
 
-    // Вывод в полярной форме
-    void displayPolar() const {
-        double r = modulus();
-        double theta = argument();
-        std::cout << "Полярная форма: " << r << "(cos(" << theta << ") + i sin(" << theta << "))" << std::endl;
+    // Преобразование в полярную форму (строка)
+    std::string toPolarString() const {
+        std::ostringstream oss;
+        oss << modulus() << "(cos(" << argument() << ") + i sin(" << argument() << "))";
+        return oss.str();
+    }
+
+    // Перегрузка операторов ввода/вывода
+    friend std::ostream& operator<<(std::ostream& os, const ComplexNumber& c) {
+        os << c.str();
+        return os;
+    }
+
+    friend std::istream& operator>>(std::istream& is, ComplexNumber& c) {
+        std::cout << "Введите действительную часть: ";
+        is >> c.real;
+        std::cout << "Введите мнимую часть: ";
+        is >> c.imag;
+        return is;
     }
 };
 
 int main() {
-    ComplexNumber a(3, 4);  // Комплексное число 3 + 4i
-    ComplexNumber b(1, -2); // Комплексное число 1 - 2i
+    std::cout << std::fixed << std::setprecision(2);
 
-    std::cout << "Комплексное число a: " << a.str() << std::endl;
-    std::cout << "Комплексное число b: " << b.str() << std::endl;
+    ComplexNumber a(3, 4);
+    ComplexNumber b(1, -2);
 
-    // Операции
-    std::cout << "Сложение: " << (a + b).str() << std::endl;
-    std::cout << "Вычитание: " << (a - b).str() << std::endl;
-    std::cout << "Умножение: " << (a * b).str() << std::endl;
-    std::cout << "Деление: " << (a / b).str() << std::endl;
+    std::cout << "Комплексное число a: " << a << std::endl;
+    std::cout << "Комплексное число b: " << b << std::endl;
 
-    // Модуль и аргумент
+    std::cout << "Сложение: " << (a + b) << std::endl;
+    std::cout << "Вычитание: " << (a - b) << std::endl;
+    std::cout << "Умножение: " << (a * b) << std::endl;
+    try {
+        std::cout << "Деление: " << (a / b) << std::endl;
+    } catch (const std::runtime_error& e) {
+        std::cerr << e.what() << std::endl;
+    }
+
     std::cout << "Модуль a: " << a.modulus() << std::endl;
     std::cout << "Аргумент a: " << a.argument() << std::endl;
 
-    // Конъюгат
-    std::cout << "Конъюгат a: " << a.conjugate().str() << std::endl;
+    std::cout << "Конъюгат a: " << a.conjugate() << std::endl;
+    std::cout << "Полярная форма a: " << a.toPolarString() << std::endl;
 
-    // Полярная форма
-    a.displayPolar();
-
-    // Сравнение
-    std::cout << "a == b? " << (a == b ? "Да" : "Нет") << std::endl;
-    std::cout << "a > b? " << (a > b ? "Да" : "Нет") << std::endl;
-
-    // Возведение в степень
     int n = 2;
-    std::cout << "a в степени " << n << ": " << a.power(n).str() << std::endl;
+    std::cout << "a в степени " << n << ": " << a.power(n) << std::endl;
 
-    // Извлечение квадратного корня
-    std::cout << "Квадратный корень из a: " << a.sqrt().str() << std::endl;
+    std::cout << "Квадратный корень из a: " << a.sqrt() << std::endl;
+
+    ComplexNumber c;
+    std::cin >> c;
+    std::cout << "Введенное комплексное число: " << c << std::endl;
 
     return 0;
 }
